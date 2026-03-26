@@ -3,6 +3,9 @@
 ### DISCLAIMER
 - Prefferably use `python 3.13` since the project was made with this
 - Prefferably you're sitting on ubuntu 24.04
+- Please go check [eBPF_log_collector](https://github.com/MisuStefanLeonard/eBPF_log_collector) first then continue with this repo
+
+
 ```bash
 cat /etc/lsb-release
 
