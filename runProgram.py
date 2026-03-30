@@ -82,7 +82,7 @@ def injectPythonPidIntoBpfMap():
     key_hex = " ".join(f"0x{b:02x}" for b in struct.pack("<I", 1))
     val_hex = " ".join(f"0x{b:02x}" for b in struct.pack("<I", currentPid))
 
-    cmd = f"bpftool map update pinned {pinned_map_path} key {key_hex} value {val_hex}"
+    cmd = f"sudo bpftool map update pinned {pinned_map_path} key {key_hex} value {val_hex}"
     try:
         subprocess.run(cmd, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print(f"✅ Successfully injected Python PID ({currentPid}) using bpftool!")
@@ -117,6 +117,11 @@ if __name__ == "__main__":
     # Injects the python program pid into the eBPF program
     injectPythonPidIntoBpfMap()
     ##
+    def get_root_node(current_node):
+        root = current_node
+        while root.parent is not None:
+            root = root.parent
+        return root
 
     while True:
         try:
@@ -147,11 +152,14 @@ if __name__ == "__main__":
                                 node = process_forest_rt.add_event(evt)
 
                                 if evt.event_type_str == "PROCESS_EXIT":
-                                    buildForestAndPredictRT(node,  xgBoostModel, "XGBoost",vectorizer)
-                                    buildForestAndPredictRT(node,  randomForestModel, "RandomForest",vectorizer)
+                                    root_node = get_root_node(node)
 
-                                    if node in process_forest_rt.dead_processes:
-                                        process_forest_rt.dead_processes.remove(node)
+                                    # 🚨 FIX 2: Evaluate the whole tree from the top down!
+                                    buildForestAndPredictRT(root_node, xgBoostModel, "XGBoost", vectorizer)
+                                    buildForestAndPredictRT(root_node, randomForestModel, "RandomForest", vectorizer)
+
+                                    # 🚨 FIX 3: DO NOT remove from dead_processes!
+                                    # We just clean up the timestamp tracker to save memory.
                                     if evt.pid in pidLastSeen:
                                         del pidLastSeen[evt.pid]
 
@@ -162,35 +170,43 @@ if __name__ == "__main__":
             ##
             currentTime = time.time()
             if currentTime - last_sweep_time > SWEEP_INTERVAL:
+
+                # We use a set to store the PIDs of the roots, because PIDs are integers (hashable!)
+                root_pids_to_evaluate = set()
+                # We also keep a temporary dictionary so we can look up the root node using its PID later
+                root_nodes_map = {}
+
                 for pid in list(process_forest_rt.active_processes.keys()):
                     node = process_forest_rt.active_processes[pid]
                     last_seen = pidLastSeen.get(pid, currentTime)
 
-                    # Scenario A: The process is stale (Missed exit signal)
+                    # Scenario A: Stale Cleanup
                     if currentTime - last_seen > STALE_TIMEOUT:
-                        print(
-                            f"🧹 [CLEANUP] PID {pid} is stale (No events in {STALE_TIMEOUT}s). Evaluating and removing...")
-                        buildForestAndPredictRT(node,  xgBoostModel, "XGBoost", vectorizer)
-                        buildForestAndPredictRT(node,  randomForestModel, "RandomForest", vectorizer)
+                        print(f"🧹 [CLEANUP] PID {pid} is stale. Removing...")
 
+                        # Find the root
+                        root = get_root_node(node)
 
-                        # Remove from memory to prevent leaks
+                        # Add the PID to the set, and save the actual node in our map
+                        root_pids_to_evaluate.add(root.pid)
+                        root_nodes_map[root.pid] = root
+
+                        # Remove the stale child from memory
                         del process_forest_rt.active_processes[pid]
                         if pid in pidLastSeen:
                             del pidLastSeen[pid]
 
-                    # Scenario B: The process is active and long-running (Evaluate it mid-execution!)
+                    # Scenario B: Active Long-Running
                     else:
-                        # You can uncomment this to constantly evaluate long running processes,
-                        # but warning: it might be spammy for heavy processes!
-                        buildForestAndPredictRT(node,  xgBoostModel, "XGBoost", vectorizer)
-                        buildForestAndPredictRT(node, randomForestModel, "RandomForest", vectorizer)
-
                         pass
 
+                # Loop through the unique root PIDs and evaluate them!
+                for root_pid in root_pids_to_evaluate:
+                    root_node = root_nodes_map[root_pid]
+                    buildForestAndPredictRT(root_node, xgBoostModel, "XGBoost", vectorizer)
+                    buildForestAndPredictRT(root_node, randomForestModel, "RandomForest", vectorizer)
+
                 last_sweep_time = time.time()
-
-
         except KeyboardInterrupt:
             print("Stopping...")
             break

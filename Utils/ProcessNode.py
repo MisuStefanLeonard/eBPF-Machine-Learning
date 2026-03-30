@@ -113,7 +113,7 @@ class ProcessNode:
                     # For boolean flags (1 or 0), if ANY child triggered it, the parent inherits it (OR logic)
                     if key.startswith('is_') or key.startswith('argv_'):
                         agg_vector[key] = max(agg_vector.get(key, 0), value)
-                    # For counters (like count_read_event), sum them up
+                    # For counters sum them up
                     else:
                         agg_vector[key] = agg_vector.get(key, 0) + value
 

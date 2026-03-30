@@ -49,8 +49,33 @@ class ProcessForest:
                 parent.children.append(node)
                 node.parent = parent
             else:
-                # Parent is untracked (maybe started before script ran)
-                # We treat this node as a "Root" for now
+                # 3a. Check if the parent recently died but is still in history
+                parent = next((n for n in self.dead_processes if n.pid == event.ppid), None)
+
+                # 3b. If completely unknown, create a PHANTOM PARENT!
+                if not parent:
+                    # This is valid because the comm is permissive and we can get the comm
+                    # -rw-r--r--  1 stefan stefan 0 mar 30 11:26 comm
+                    real_comm = "<untracked_parent>"
+                    try:
+                        # Try to read the process name directly from the Linux kernel
+                        with open(f"/proc/{event.ppid}/comm", "r") as f:
+                            real_comm = f.read().strip()
+                    except Exception:
+                        # If the process already died too fast, or we don't have permission, keep the placeholder
+                        pass
+                    # We use ppid=0 and a placeholder name until we (hopefully) see a real event for it
+                    parent = ProcessNode(
+                        pid=event.ppid,
+                        ppid=0,
+                        comm=real_comm,
+                        start_time=event.comm_timestamp
+                    )
+                    self.active_processes[event.ppid] = parent
+
+                # Link the child to the dead or phantom parent
+                parent.children.append(node)
+                node.parent = parent
                 pass
 
         return node
