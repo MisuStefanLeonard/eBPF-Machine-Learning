@@ -41,8 +41,6 @@ try:
 
             dataframes.append(df)
 
-    print("Am ajuns aici primul")
-
     # Combine ALL data BEFORE applying TF-IDF
     finalDf = pd.concat(dataframes, ignore_index=True)
 
@@ -63,7 +61,6 @@ try:
 
     # Save the final training dataset
     finalDf.to_csv(os.path.join(trainingPath, "finalDfTraining.csv"), index=False)
-    print("Am ajuns aici ")
 
 
     # ==========================================
@@ -173,7 +170,7 @@ try:
             plt.savefig(os.path.join(plots_dir, f"{model_name}_roc_curve.png"), dpi=300, bbox_inches='tight')
             plt.close()
 
-        print(f"✅ All plots for {model_name} saved in {plots_dir}")
+        print(f"All plots for {model_name} saved in {plots_dir}")
 
     # ==========================================
     # 4. TRAIN ALGORITHM & CALL METRICS
