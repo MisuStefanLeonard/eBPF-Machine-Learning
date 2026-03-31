@@ -1226,7 +1226,7 @@ sudo systemctl status mongod
                             break
 
                 if not root:
-                    print(f"❌ PID {start_pid} not found in Forest.")
+                    print(f" PID {start_pid} not found in Forest.")
                     return
 
                 print(f"🌳 Process Tree for PID {start_pid} ({root.comm})")
@@ -1234,7 +1234,7 @@ sudo systemctl status mongod
 
             def _recursive_print(self, node: ProcessNode, depth: int = 0):
                 indent = "    " * depth
-                icon = "└─ ⚙️ " if depth > 0 else "🛑 "
+                icon = "└─  " if depth > 0 else " "
 
                 # 1. Print The Process Node
                 print(f"{indent}{icon}PID: {node.pid} | Comm: {node.comm}")
@@ -1257,11 +1257,11 @@ sudo systemctl status mongod
                         detail = f"Net: {evt.ipv4}"
 
                     arrow = "  🔹"
-                    if "EXECVE" in evt.event_type_str: arrow = "  🚀"
-                    if "EXIT" in evt.event_type_str: arrow = "  💀"
-                    if "SOCKET" in evt.event_type_str: arrow = "  🌐"
-                    if "OPEN" in evt.event_type_str: arrow = "  📂"
-                    if "AUTH" in evt.event_type_str: arrow = "  🔑"
+                    if "EXECVE" in evt.event_type_str: arrow = "  "
+                    if "EXIT" in evt.event_type_str: arrow = "  "
+                    if "SOCKET" in evt.event_type_str: arrow = "  "
+                    if "OPEN" in evt.event_type_str: arrow = "  "
+                    if "AUTH" in evt.event_type_str: arrow = "  "
 
                     print(f"{indent}    {arrow} [{ts}] {evt.event_type_str} {detail}")
 
@@ -1278,7 +1278,6 @@ sudo systemctl status mongod
                 )
 
                 for node in all_nodes:
-                    # ---> CHANGE HERE: Use the aggregated vector <---
                     vector = node.get_aggregated_vector()
                     rows.append(vector)
 
