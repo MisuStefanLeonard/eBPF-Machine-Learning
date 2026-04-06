@@ -10,6 +10,16 @@ dropped_cols/
 temp/
 TrueCols/
 clean.py
+# added for the real_time_detection branch
+dataEngineering.py
+runProgram.py
+__init__.py
+ScoresAssignedCSV/
+Predictions/
+Plots/
+gatheredCsv/
+ML_Models/modelsWithWrongEntropy/
+README.md
 
 # Distribution / packaging
 .Python

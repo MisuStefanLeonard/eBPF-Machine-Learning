@@ -1558,4 +1558,7 @@ sudo systemctl status mongod
     - ### III. Drawbacks
         - **_Small dataset_**. Hence I used a very small dataset, around 1200 entries, very few **benign** entries also, and also applying the **TF-IDF**, if there are some new commands entered, the algorithm will not know and predict bad. If I will gather a bigger dataset or if you do , you can retrain !
         - Not an expert in ML engineering. Those were the metrics that I considered useful for this task. Of course , they can be fine-tuned more, but this was all I got.
-
+    
+    - ### IV. Real-time-detection branch
+      - There is a branch called `real_time_detection`. This is the branch that was used for the real-time-detection all together program along with the interface.
+      - It includes only the `ML_Models`, `Models`, and `Utils`, all that is needed for the detection. This branch will be cloned on the main repository which links them all together.
