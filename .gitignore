@@ -18,7 +18,7 @@ ScoresAssignedCSV/
 Predictions/
 Plots/
 gatheredCsv/
-ML_Models/modelsWithWrongEntropy/
+MLModels/modelsWithWrongEntropy/
 README.md
 
 # Distribution / packaging
