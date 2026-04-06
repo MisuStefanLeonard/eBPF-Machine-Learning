@@ -606,7 +606,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional, Dict
 
 from predictionAlgorithm.ClassModels.EventType import EventType
-from predictionAlgorithm.Utils.constants import network_tools, target_devices
+from predictionAlgorithm.Utils.utils import network_tools, target_devices
 from predictionAlgorithm.ClassModels import Event
 
 @dataclass
